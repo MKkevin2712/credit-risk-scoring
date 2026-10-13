@@ -1,0 +1,38 @@
+[project]
+name = "credit-risk-scoring"
+version = "0.1.0"
+description = "Scoring de risque de crédit (Home Credit) : scorecard WoE, LightGBM, SHAP et API."
+authors = [{ name = "Kevin Moukam Nkameni", email = "kevinnkameni@gmail.com" }]
+requires-python = ">=3.12"
+dependencies = [
+    "duckdb>=1.5.6",
+    "kaggle>=2.2.4",
+    "lightgbm>=4.7.0",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.4",
+    "optbinning>=1.0.0",
+    "pandas>=3.0.6",
+    "pyarrow>=26.0.0",
+    "scikit-learn>=1.9.1",
+    "seaborn>=0.13.2",
+    "shap>=0.53.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+    "jupyterlab>=4.6.4",
+    "pytest>=9.1.1",
+    "ruff>=0.17.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100

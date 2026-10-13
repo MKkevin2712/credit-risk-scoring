@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.venv
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Données (volumineuses et soumises au règlement Kaggle) : ne jamais les publier
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+*.duckdb
+*.duckdb.wal
+
+# Modèles entraînés
+models/
+*.joblib
+
+# Secrets
+kaggle.json
+access_token
+.env
