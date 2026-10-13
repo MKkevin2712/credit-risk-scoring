@@ -35,7 +35,7 @@ Les données ne sont pas publiées dans ce dépôt (règlement Kaggle).
 ## Plan
 
 - [x] Mise en place du projet
-- [ ] Analyse exploratoire
+- [x] Analyse exploratoire ([notebook](notebooks/01_exploration.ipynb))
 - [ ] Features SQL (DuckDB) à partir des tables d'historique
 - [ ] Scorecard WoE / IV + régression logistique
 - [ ] LightGBM, calibration, explicabilité SHAP
