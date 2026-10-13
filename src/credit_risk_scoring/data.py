@@ -20,7 +20,16 @@ def download() -> None:
     api = KaggleApi()
     api.authenticate()
     DATA_RAW.mkdir(parents=True, exist_ok=True)
-    api.competition_download_files(KAGGLE_COMPETITION, path=DATA_RAW, quiet=False)
+    try:
+        api.competition_download_files(KAGGLE_COMPETITION, path=DATA_RAW, quiet=False)
+    except Exception as e:
+        if "403" in str(e):
+            sys.exit(
+                "Accès refusé (403) : acceptez le règlement sur "
+                f"https://www.kaggle.com/competitions/{KAGGLE_COMPETITION}/rules "
+                "(bouton « I Understand and Accept »), puis relancez."
+            )
+        raise
     archive = DATA_RAW / f"{KAGGLE_COMPETITION}.zip"
     with zipfile.ZipFile(archive) as z:
         z.extractall(DATA_RAW)
