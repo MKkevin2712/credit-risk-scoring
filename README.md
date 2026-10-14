@@ -32,12 +32,22 @@ d'autres organismes, demandes précédentes, remboursements).
 
 Les données ne sont pas publiées dans ce dépôt (règlement Kaggle).
 
+## Résultats
+
+| Modèle | Variables | AUC (test) | Gini (test) | KS (test) |
+|---|---:|---:|---:|---:|
+| Scorecard WoE + régression logistique | 18 | 0,759 | 0,517 | 0,392 |
+
+Les 10 % de clients jugés les plus risqués font **27 % de défauts**, contre **1,3 %** pour les 10 % les moins risqués.
+
+![Défaut prédit vs réel par décile](reports/figures/03_deciles.png)
+
 ## Plan
 
 - [x] Mise en place du projet
 - [x] Analyse exploratoire ([notebook](notebooks/01_exploration.ipynb))
 - [x] Features SQL (DuckDB) à partir des tables d'historique : 51 variables ([requêtes](src/credit_risk_scoring/sql/))
-- [ ] Scorecard WoE / IV + régression logistique
+- [x] Scorecard WoE / IV + régression logistique : 18 variables, **Gini 0,52 sur le test** ([notebook](notebooks/03_scorecard.ipynb))
 - [ ] LightGBM, calibration, explicabilité SHAP
 - [ ] Seuil de décision métier et grille de score
 - [ ] API FastAPI, Docker, démo Streamlit, CI GitHub Actions
@@ -52,6 +62,7 @@ uv run kaggle auth login                             # connexion Kaggle (une seu
 uv run python -m credit_risk_scoring.data download   # télécharge les données Kaggle
 uv run python -m credit_risk_scoring.data load       # charge les CSV dans DuckDB
 uv run python -m credit_risk_scoring.features        # construit data/processed/features.parquet
+uv run python -m credit_risk_scoring.scorecard       # entraîne la scorecard → models/scorecard.joblib
 uv run pytest                                        # tests
 uv run jupyter lab                                   # notebooks
 ```
@@ -66,6 +77,8 @@ src/credit_risk_scoring/
     config.py      chemins et constantes
     data.py        téléchargement et chargement dans DuckDB
     features.py    assemblage des features (une ligne par demande)
+    modeling.py    découpage train/test, indicateurs AUC / Gini / KS
+    scorecard.py   scorecard WoE / IV + régression logistique
     sql/           une requête d'agrégation par table d'historique
 tests/             tests pytest
 reports/figures/   graphiques
