@@ -42,7 +42,9 @@ def con():
         CREATE TABLE installments_payments AS SELECT * FROM (VALUES
             (100, 1, 1, 1, -100, -102, 500.0, 300.0),
             (100, 1, 1, 1, -100,  -95, 500.0, 200.0),
-            (100, 1, 1, 2,  -70,  -70, 500.0, 400.0)
+            (100, 1, 1, 2,  -70,  -70, 500.0, 400.0),
+            (100, 1, 1, 3,  -40,  -40, 0.3, 0.1),
+            (100, 1, 1, 3,  -40,  -40, 0.3, 0.2)
         ) t(SK_ID_PREV, SK_ID_CURR, NUM_INSTALMENT_VERSION, NUM_INSTALMENT_NUMBER, DAYS_INSTALMENT,
             DAYS_ENTRY_PAYMENT, AMT_INSTALMENT, AMT_PAYMENT)
     """)
@@ -55,7 +57,8 @@ def con():
     """)
     con.execute("""
         CREATE TABLE POS_CASH_balance AS SELECT * FROM (VALUES
-            (300, 1, -1, 12.0, 3.0, 0), (300, 1, -2, 12.0, 4.0, 10)
+            (300, 1, -1, 12.0, 3.0, 0), (300, 1, -2, 12.0, 4.0, 10),
+            (301, 1, -40, 10.0, 5.0, 0), (301, 1, -41, 10.0, 6.0, 0)
         ) t(SK_ID_PREV, SK_ID_CURR, MONTHS_BALANCE, CNT_INSTALMENT, CNT_INSTALMENT_FUTURE, SK_DPD)
     """)
     yield con
@@ -101,16 +104,20 @@ def test_previous_applications(features):
 
 
 def test_installments_group_partial_payments(features):
-    assert features.loc[1, "INST_N_INSTALMENTS"] == 2           # 3 paiements, 2 échéances
+    assert features.loc[1, "INST_N_INSTALMENTS"] == 3           # 5 paiements, 3 échéances
     assert features.loc[1, "INST_MAX_DAYS_LATE"] == 5           # dernier paiement à -95 pour -100
-    assert features.loc[1, "INST_LATE_RATIO"] == pytest.approx(0.5)
+    assert features.loc[1, "INST_LATE_RATIO"] == pytest.approx(1 / 3)
+    # 0,1 + 0,2 ≠ 0,3 en virgule flottante : l'échéance 3 ne doit pas compter comme impayée
+    assert features.loc[1, "INST_UNDERPAID_RATIO"] == pytest.approx(1 / 3)
     assert features.loc[1, "INST_TOTAL_UNPAID"] == pytest.approx(100.0)
 
 
 def test_credit_card_and_pos(features):
     assert features.loc[1, "CC_MEAN_UTILIZATION"] == pytest.approx(0.75)
     assert features.loc[1, "CC_MAX_DPD"] == 3
-    assert features.loc[1, "POS_REMAINING_RATIO"] == pytest.approx(0.25)
+    # dernier relevé de chaque crédit : 3/12 (mois -1) et 5/10 (mois -40, pas de relevé récent)
+    assert features.loc[1, "POS_REMAINING_RATIO"] == pytest.approx((0.25 + 0.5) / 2)
+    assert features.loc[1, "POS_LATE_MONTHS_RATIO"] == pytest.approx(1 / 4)
 
 
 def test_client_without_history_has_zero_counts(features):

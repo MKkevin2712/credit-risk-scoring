@@ -17,7 +17,8 @@ enriched AS (
     SELECT
         *,
         GREATEST(last_payment_day - due_day, 0)    AS days_late,
-        GREATEST(amount_due - amount_paid, 0)      AS amount_unpaid
+        -- arrondi au centime : évite de compter 0,000000001 € comme un impayé (erreurs de virgule flottante)
+        GREATEST(ROUND(amount_due - amount_paid, 2), 0) AS amount_unpaid
     FROM by_instalment
 )
 SELECT
