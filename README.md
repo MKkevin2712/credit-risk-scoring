@@ -45,7 +45,16 @@ Les probabilités de défaut sont **bien calibrées** : PD moyenne prédite 8,00
 Avec la scorecard, les 10 % de clients jugés les plus risqués font **27 % de défauts**, contre **1,3 %** pour les 10 % les moins risqués.
 LightGBM gagne près de 6 points de Gini ; ses décisions sont expliquées client par client avec **SHAP** ([notebook](notebooks/04_lgbm_shap.ipynb)).
 
-![Défaut prédit vs réel par décile](reports/figures/03_deciles.png)
+### Décision d'octroi
+
+Avec une marge de 10 % et une perte de 60 % en cas de défaut (hypothèses illustratives), un crédit est rentable tant que
+**PD < 14,3 %**. Sur le test, cette règle accepte **84,5 %** des demandes, écarte **48,5 %** des mauvais payeurs
+(pour 12,6 % des bons) et **augmente le gain du portefeuille de 21 %** par rapport à « tout accepter ».
+
+Le risque est aussi exprimé en **score** (600 points = cote de 50 bons pour 1 mauvais, +20 points = cote doublée),
+en **classes A à E**, et via une **grille de points** explicable ligne par ligne ([notebook](notebooks/06_decision.ipynb)).
+
+![Gain selon le seuil](reports/figures/06_seuil_gain.png)
 
 ## Plan
 
@@ -55,7 +64,7 @@ LightGBM gagne près de 6 points de Gini ; ses décisions sont expliquées clien
 - [x] Scorecard WoE / IV + régression logistique : 18 variables, **Gini 0,52 sur le test** ([notebook](notebooks/03_scorecard.ipynb))
 - [x] LightGBM et explicabilité SHAP
 - [x] Optimisation des hyperparamètres (Optuna) et calibration des probabilités
-- [ ] Seuil de décision métier et grille de score
+- [x] Seuil de décision métier, classes de risque et grille de points
 - [ ] API FastAPI, Docker, démo Streamlit, CI GitHub Actions
 
 ## Lancer le projet
@@ -89,6 +98,7 @@ src/credit_risk_scoring/
     scorecard.py   scorecard WoE / IV + régression logistique
     lgbm.py        LightGBM avec validation croisée et arrêt anticipé
     tune.py        optimisation des hyperparamètres avec Optuna
+    decision.py    seuil d'octroi, rentabilité, score en points, grille de la scorecard
     sql/           une requête d'agrégation par table d'historique
 tests/             tests pytest
 reports/figures/   graphiques
