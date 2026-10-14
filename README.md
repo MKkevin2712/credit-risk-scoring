@@ -1,6 +1,8 @@
 # Scoring de risque de crédit — Home Credit
 
-> 🚧 Projet en cours (octobre–novembre 2026)
+[![Tests](https://github.com/MKkevin2712/credit-risk-scoring/actions/workflows/tests.yml/badge.svg)](https://github.com/MKkevin2712/credit-risk-scoring/actions/workflows/tests.yml)
+
+> Projet réalisé en octobre 2026 : données, modélisation, décision métier et mise en production.
 
 ## Objectif
 
@@ -36,36 +38,79 @@ Les données ne sont pas publiées dans ce dépôt (règlement Kaggle).
 
 | Modèle | Variables | AUC (test) | Gini (test) | KS (test) |
 |---|---:|---:|---:|---:|
-| Scorecard WoE + régression logistique | 18 | 0,759 | 0,517 | 0,392 |
-| LightGBM, réglages initiaux | 170 | 0,788 | 0,575 | 0,436 |
-| LightGBM optimisé (Optuna, 30 essais) | 170 | **0,790** | **0,579** | **0,442** |
+| Scorecard WoE + régression logistique | 19 | 0,757 | 0,515 | 0,390 |
+| LightGBM, réglages initiaux | 170 | 0,788 | 0,576 | 0,437 |
+| LightGBM optimisé (Optuna, 30 essais) | 170 | **0,790** | **0,580** | **0,441** |
 
 Les probabilités de défaut sont **bien calibrées** : PD moyenne prédite 8,00 % pour 8,07 % de défauts observés ([notebook](notebooks/05_optimisation_calibration.ipynb)).
 
-Avec la scorecard, les 10 % de clients jugés les plus risqués font **27 % de défauts**, contre **1,3 %** pour les 10 % les moins risqués.
+Avec la scorecard, les 10 % de clients jugés les plus risqués font **27 % de défauts**, contre **1,1 %** pour les 10 % les moins risqués.
 LightGBM gagne près de 6 points de Gini ; ses décisions sont expliquées client par client avec **SHAP** ([notebook](notebooks/04_lgbm_shap.ipynb)).
 
 ### Décision d'octroi
 
 Avec une marge de 10 % et une perte de 60 % en cas de défaut (hypothèses illustratives), un crédit est rentable tant que
-**PD < 14,3 %**. Sur le test, cette règle accepte **84,5 %** des demandes, écarte **48,5 %** des mauvais payeurs
-(pour 12,6 % des bons) et **augmente le gain du portefeuille de 21 %** par rapport à « tout accepter ».
+**PD < 14,3 %**. Sur le test, cette règle accepte **84 %** des demandes, écarte **50 %** des mauvais payeurs
+(pour 13 % des bons) et **augmente le gain du portefeuille de 22 %** par rapport à « tout accepter ».
 
 Le risque est aussi exprimé en **score** (600 points = cote de 50 bons pour 1 mauvais, +20 points = cote doublée),
 en **classes A à E**, et via une **grille de points** explicable ligne par ligne ([notebook](notebooks/06_decision.ipynb)).
 
 ![Gain selon le seuil](reports/figures/06_seuil_gain.png)
 
+## Utiliser le modèle
+
+### API (FastAPI)
+
+```bash
+uv run uvicorn credit_risk_scoring.api:app --reload    # documentation interactive : http://127.0.0.1:8000/docs
+```
+
+| Route | Rôle |
+|---|---|
+| `POST /predict` | PD, score, classe A à E, décision et principales raisons (SHAP) d'une demande |
+| `GET /features` | variables attendues, avec leur type et les catégories connues |
+| `GET /policy` | règle d'octroi et classes de risque |
+| `GET /health` | état du service |
+
+```bash
+curl -X POST http://127.0.0.1:8000/predict -H "Content-Type: application/json" -d '{"features": {"EXT_SOURCE_2": 0.62, "EXT_SOURCE_3": 0.51, "AMT_INCOME_TOTAL": 180000, "AMT_CREDIT": 500000, "AMT_ANNUITY": 25000, "DAYS_BIRTH": -14000, "DAYS_EMPLOYED": -2500}}'
+```
+
+Les variables dérivées (ratios, âge…) sont **recalculées par l'API exactement comme en SQL** ; un test vérifie
+que les deux calculs restent identiques, pour éviter tout écart entre l'entraînement et la production.
+
+### Démo (Streamlit)
+
+```bash
+uv run streamlit run app/demo.py
+```
+
+On choisit une demande du jeu de test (dont on connaît l'issue réelle), on modifie ses caractéristiques
+(scores externes, revenu, montant, âge…) et on voit en direct la PD, le score, la classe, la décision et ses raisons.
+
+### Docker
+
+```bash
+docker build -t credit-scoring-api .          # nécessite models/lgbm.joblib (entraîné au préalable)
+docker run -p 8000:8000 credit-scoring-api
+```
+
+### Intégration continue
+
+À chaque `git push`, GitHub Actions vérifie le style (ruff) et lance les tests sur des données fictives
+([workflow](.github/workflows/tests.yml)).
+
 ## Plan
 
 - [x] Mise en place du projet
 - [x] Analyse exploratoire ([notebook](notebooks/01_exploration.ipynb))
 - [x] Features SQL (DuckDB) à partir des tables d'historique : 51 variables ([requêtes](src/credit_risk_scoring/sql/))
-- [x] Scorecard WoE / IV + régression logistique : 18 variables, **Gini 0,52 sur le test** ([notebook](notebooks/03_scorecard.ipynb))
+- [x] Scorecard WoE / IV + régression logistique : 19 variables, **Gini 0,52 sur le test** ([notebook](notebooks/03_scorecard.ipynb))
 - [x] LightGBM et explicabilité SHAP
 - [x] Optimisation des hyperparamètres (Optuna) et calibration des probabilités
 - [x] Seuil de décision métier, classes de risque et grille de points
-- [ ] API FastAPI, Docker, démo Streamlit, CI GitHub Actions
+- [x] API FastAPI, démo Streamlit, Docker, CI GitHub Actions
 
 ## Lancer le projet
 
@@ -99,6 +144,9 @@ src/credit_risk_scoring/
     lgbm.py        LightGBM avec validation croisée et arrêt anticipé
     tune.py        optimisation des hyperparamètres avec Optuna
     decision.py    seuil d'octroi, rentabilité, score en points, grille de la scorecard
+    scoring.py     évaluation d'une demande (PD, score, décision, raisons SHAP)
+    api.py         API FastAPI
+app/demo.py        démo Streamlit
     sql/           une requête d'agrégation par table d'historique
 tests/             tests pytest
 reports/figures/   graphiques

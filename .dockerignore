@@ -1,0 +1,11 @@
+.venv
+.git
+data
+notebooks
+reports
+tests
+app
+models/*
+!models/lgbm.joblib
+**/__pycache__
+*.ipynb

@@ -13,5 +13,6 @@ SELECT
     AMT_ANNUITY / NULLIF(AMT_CREDIT, 0)                        AS CREDIT_TERM,            -- inverse de la durée
     AMT_CREDIT  / NULLIF(AMT_GOODS_PRICE, 0)                   AS CREDIT_GOODS_RATIO,     -- part financée
     AMT_INCOME_TOTAL / NULLIF(CNT_FAM_MEMBERS, 0)              AS INCOME_PER_PERSON,
-    DAYS_EMPLOYED / NULLIF(DAYS_BIRTH, 0)                      AS EMPLOYED_AGE_RATIO
+    -- part de la vie passée dans l'emploi actuel ; attention : la colonne d'origine contient encore 365243
+    NULLIF(DAYS_EMPLOYED, 365243) / NULLIF(DAYS_BIRTH, 0)     AS EMPLOYED_AGE_RATIO
 FROM application_train
