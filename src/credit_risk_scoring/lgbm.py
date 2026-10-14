@@ -3,10 +3,13 @@
 Contrairement à la scorecard, LightGBM utilise directement les 170 variables brutes :
 il gère seul les valeurs manquantes, les relations non linéaires et les interactions.
 Le nombre d'arbres est choisi par validation croisée (5 plis) avec arrêt anticipé.
+Si l'optimisation Optuna a été lancée (tune.py), ses meilleurs réglages sont utilisés.
 
 Usage :
     uv run python -m credit_risk_scoring.lgbm
 """
+import json
+
 import joblib
 import lightgbm as lgb
 import numpy as np
@@ -17,6 +20,7 @@ from credit_risk_scoring.config import ROOT, SEED
 from credit_risk_scoring.modeling import evaluate, load_features, split
 
 MODEL_PATH = ROOT / "models" / "lgbm.joblib"
+TUNED_PARAMS_PATH = ROOT / "reports" / "lgbm_best_params.json"
 
 PARAMS = {
     "objective": "binary",
@@ -31,6 +35,13 @@ PARAMS = {
     "seed": SEED,
     "verbose": -1,
 }
+
+
+def tuned_params() -> dict:
+    """Meilleurs réglages trouvés par Optuna (vide si l'optimisation n'a pas été lancée)."""
+    if not TUNED_PARAMS_PATH.exists():
+        return {}
+    return json.loads(TUNED_PARAMS_PATH.read_text(encoding="utf-8"))["params"]
 
 
 class LGBMModel:
@@ -78,7 +89,9 @@ def main() -> None:
     df = load_features()
     X_train, X_test, y_train, y_test = split(df)
 
-    model = LGBMModel().fit(X_train, y_train)
+    params = tuned_params()
+    print("Réglages optimisés par Optuna" if params else "Réglages par défaut")
+    model = LGBMModel(params=params).fit(X_train, y_train)
     print(f"Validation croisée : AUC {model.cv_auc:.3f} ± {model.cv_auc_std:.3f} ({model.n_rounds} arbres)")
     for name, X, y in [("Train", X_train, y_train), ("Test ", X_test, y_test)]:
         m = evaluate(y, model.predict_proba(X))

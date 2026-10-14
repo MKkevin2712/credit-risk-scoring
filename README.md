@@ -37,7 +37,10 @@ Les données ne sont pas publiées dans ce dépôt (règlement Kaggle).
 | Modèle | Variables | AUC (test) | Gini (test) | KS (test) |
 |---|---:|---:|---:|---:|
 | Scorecard WoE + régression logistique | 18 | 0,759 | 0,517 | 0,392 |
-| LightGBM (755 arbres, validation croisée 5 plis) | 170 | **0,788** | **0,575** | **0,436** |
+| LightGBM, réglages initiaux | 170 | 0,788 | 0,575 | 0,436 |
+| LightGBM optimisé (Optuna, 30 essais) | 170 | **0,790** | **0,579** | **0,442** |
+
+Les probabilités de défaut sont **bien calibrées** : PD moyenne prédite 8,00 % pour 8,07 % de défauts observés ([notebook](notebooks/05_optimisation_calibration.ipynb)).
 
 Avec la scorecard, les 10 % de clients jugés les plus risqués font **27 % de défauts**, contre **1,3 %** pour les 10 % les moins risqués.
 LightGBM gagne près de 6 points de Gini ; ses décisions sont expliquées client par client avec **SHAP** ([notebook](notebooks/04_lgbm_shap.ipynb)).
@@ -51,7 +54,7 @@ LightGBM gagne près de 6 points de Gini ; ses décisions sont expliquées clien
 - [x] Features SQL (DuckDB) à partir des tables d'historique : 51 variables ([requêtes](src/credit_risk_scoring/sql/))
 - [x] Scorecard WoE / IV + régression logistique : 18 variables, **Gini 0,52 sur le test** ([notebook](notebooks/03_scorecard.ipynb))
 - [x] LightGBM et explicabilité SHAP
-- [ ] Optimisation des hyperparamètres (Optuna) et calibration des probabilités
+- [x] Optimisation des hyperparamètres (Optuna) et calibration des probabilités
 - [ ] Seuil de décision métier et grille de score
 - [ ] API FastAPI, Docker, démo Streamlit, CI GitHub Actions
 
@@ -66,7 +69,8 @@ uv run python -m credit_risk_scoring.data download   # télécharge les données
 uv run python -m credit_risk_scoring.data load       # charge les CSV dans DuckDB
 uv run python -m credit_risk_scoring.features        # construit data/processed/features.parquet
 uv run python -m credit_risk_scoring.scorecard       # entraîne la scorecard → models/scorecard.joblib
-uv run python -m credit_risk_scoring.lgbm            # entraîne LightGBM (≈ 6 min) → models/lgbm.joblib
+uv run python -m credit_risk_scoring.tune            # optimisation Optuna (≈ 1 h) → reports/lgbm_best_params.json
+uv run python -m credit_risk_scoring.lgbm            # entraîne LightGBM (≈ 10 min) → models/lgbm.joblib
 uv run pytest                                        # tests
 uv run jupyter lab                                   # notebooks
 ```
@@ -84,6 +88,7 @@ src/credit_risk_scoring/
     modeling.py    découpage train/test, indicateurs AUC / Gini / KS
     scorecard.py   scorecard WoE / IV + régression logistique
     lgbm.py        LightGBM avec validation croisée et arrêt anticipé
+    tune.py        optimisation des hyperparamètres avec Optuna
     sql/           une requête d'agrégation par table d'historique
 tests/             tests pytest
 reports/figures/   graphiques
