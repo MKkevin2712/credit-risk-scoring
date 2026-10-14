@@ -36,7 +36,7 @@ Les données ne sont pas publiées dans ce dépôt (règlement Kaggle).
 
 - [x] Mise en place du projet
 - [x] Analyse exploratoire ([notebook](notebooks/01_exploration.ipynb))
-- [ ] Features SQL (DuckDB) à partir des tables d'historique
+- [x] Features SQL (DuckDB) à partir des tables d'historique : 51 variables ([requêtes](src/credit_risk_scoring/sql/))
 - [ ] Scorecard WoE / IV + régression logistique
 - [ ] LightGBM, calibration, explicabilité SHAP
 - [ ] Seuil de décision métier et grille de score
@@ -51,6 +51,7 @@ uv sync                                              # environnement Python 3.12
 uv run kaggle auth login                             # connexion Kaggle (une seule fois)
 uv run python -m credit_risk_scoring.data download   # télécharge les données Kaggle
 uv run python -m credit_risk_scoring.data load       # charge les CSV dans DuckDB
+uv run python -m credit_risk_scoring.features        # construit data/processed/features.parquet
 uv run pytest                                        # tests
 uv run jupyter lab                                   # notebooks
 ```
@@ -64,7 +65,8 @@ notebooks/         analyses exploratoires et résultats
 src/credit_risk_scoring/
     config.py      chemins et constantes
     data.py        téléchargement et chargement dans DuckDB
-    sql/           requêtes de feature engineering
+    features.py    assemblage des features (une ligne par demande)
+    sql/           une requête d'agrégation par table d'historique
 tests/             tests pytest
 reports/figures/   graphiques
 ```
