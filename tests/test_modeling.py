@@ -52,3 +52,16 @@ def test_scorecard_outputs_probabilities(synthetic):
     assert pd_.shape == (len(X),)
     assert ((pd_ > 0) & (pd_ < 1)).all()
     assert evaluate(y, pd_)["AUC"] > 0.7
+
+
+def test_lgbm_learns_and_handles_unseen_categories(synthetic):
+    from credit_risk_scoring.lgbm import LGBMModel
+
+    X, y = synthetic
+    model = LGBMModel(params={"learning_rate": 0.1}, max_rounds=200, nfold=3).fit(X, y)
+    assert evaluate(y, model.predict_proba(X))["AUC"] > 0.7
+    assert model.feature_importance().index[-1] == "bruit"
+
+    nouveau = X.head(3).copy()
+    nouveau["categorie"] = "Z"   # catégorie jamais vue à l'entraînement : traitée comme manquante
+    assert len(model.predict_proba(nouveau)) == 3

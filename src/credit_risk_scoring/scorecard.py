@@ -14,6 +14,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from optbinning import BinningProcess
+from pandas.api.types import is_numeric_dtype
 from sklearn.linear_model import LogisticRegression
 
 from credit_risk_scoring.config import ROOT
@@ -33,7 +34,7 @@ class Scorecard:
         self.max_variables = max_variables
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "Scorecard":
-        categorical = [c for c in X.columns if X[c].dtype == object]
+        categorical = [c for c in X.columns if not is_numeric_dtype(X[c])]
         self.binning = BinningProcess(
             variable_names=list(X.columns),
             categorical_variables=categorical,
