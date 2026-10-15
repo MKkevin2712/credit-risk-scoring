@@ -198,7 +198,7 @@ if reasons:
         alt.Chart(df)
         .mark_bar()
         .encode(
-            x=alt.X("effet:Q", title="Effet sur le risque (log-odds)"),
+            x=alt.X("effet:Q", title="Effet sur le risque (log-odds)", axis=alt.Axis(tickCount=6, format=".1f")),
             y=alt.Y("variable:N", sort=None, title=None, axis=alt.Axis(labelLimit=320)),
             color=alt.Color("sens:N", scale=alt.Scale(domain=["Augmente le risque", "Diminue le risque"],
                                                       range=["#C62828", "#2E7D32"]),

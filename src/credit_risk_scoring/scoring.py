@@ -67,6 +67,14 @@ LABELS = {
     "FLAG_OWN_CAR": "Possède une voiture",
     "FLAG_OWN_REALTY": "Possède un logement",
     "CNT_FAM_MEMBERS": "Taille du foyer",
+    "REGION_POPULATION_RELATIVE": "Densité de population de la région",
+    "HOUR_APPR_PROCESS_START": "Heure de la demande",
+    "AMT_REQ_CREDIT_BUREAU_YEAR": "Consultations du bureau de crédit (1 an)",
+    "DEF_30_CNT_SOCIAL_CIRCLE": "Défauts dans l'entourage",
+    "PREV_MEAN_CREDIT": "Montant moyen des crédits précédents",
+    "PREV_CANCELED_RATIO": "Part des demandes précédentes annulées",
+    "BUREAU_MAX_AMT_OVERDUE": "Plus gros impayé auprès d'autres organismes",
+    "FLAG_DOCUMENT_3": "Justificatif n° 3 fourni",
 }
 
 
