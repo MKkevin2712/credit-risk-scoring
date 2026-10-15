@@ -86,8 +86,12 @@ que les deux calculs restent identiques, pour éviter tout écart entre l'entra�
 uv run streamlit run app/demo.py
 ```
 
-On choisit une demande du jeu de test (dont on connaît l'issue réelle), on modifie ses caractéristiques
-(scores externes, revenu, montant, âge…) et on voit en direct la PD, le score, la classe, la décision et ses raisons.
+On choisit une demande du jeu de test (dont on connaît l'issue réelle) ou un profil type, on modifie ses
+caractéristiques (scores externes, revenu, montant, âge…) et on voit en direct la PD, le score, la classe,
+la décision et ses raisons.
+
+La version en ligne ne propose que les **profils types** : les données Kaggle ne peuvent pas être publiées
+(règlement de la compétition). Seul le modèle final (`models/lgbm.joblib`, 3,5 Mo) est versionné.
 
 ### Docker
 

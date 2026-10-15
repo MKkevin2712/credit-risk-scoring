@@ -18,9 +18,10 @@ data/processed/*
 *.duckdb
 *.duckdb.wal
 
-# Modèles entraînés
-models/
+# Modèles entraînés (seul le modèle final est publié : il sert à la démo en ligne et à l'image Docker)
+models/*
 *.joblib
+!models/lgbm.joblib
 
 # Secrets
 kaggle.json
