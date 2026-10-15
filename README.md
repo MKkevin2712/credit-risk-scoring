@@ -1,10 +1,10 @@
 # Scoring de risque de crédit — Home Credit
 
-[![Tests](https://github.com/MKkevin2712/credit-risk-scoring/actions/workflows/tests.yml/badge.svg)](https://github.com/MKkevin2712/credit-risk-scoring/actions/workflows/tests.yml)
+[![Tests](https://github.com/MKkevin2712/credit-risk-scoring/actions/workflows/tests.yml/badge.svg)](https://github.com/MKkevin2712/credit-risk-scoring/actions/workflows/tests.yml) [![Démo Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://credit-risk-scoring-v3skumb2upo62popkvb4xs.streamlit.app/)
 
 > Projet réalisé en octobre 2026 : données, modélisation, décision métier et mise en production.
 
-📓 **Notebook Kaggle (en anglais)** : [Credit Risk Scoring: SQL, LightGBM, SHAP](https://www.kaggle.com/code/kevinnkameni/credit-risk-scoring-sql-lightgbm-shap)
+🚀 **Démo en ligne** : [credit-risk-scoring.streamlit.app](https://credit-risk-scoring-v3skumb2upo62popkvb4xs.streamlit.app/) · 📓 **Notebook Kaggle (en anglais)** : [Credit Risk Scoring: SQL, LightGBM, SHAP](https://www.kaggle.com/code/kevinnkameni/credit-risk-scoring-sql-lightgbm-shap)
 
 ## Objectif
 
