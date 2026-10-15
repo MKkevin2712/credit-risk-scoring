@@ -4,6 +4,8 @@
 
 > Projet réalisé en octobre 2026 : données, modélisation, décision métier et mise en production.
 
+📓 **Notebook Kaggle (en anglais)** : [Credit Risk Scoring: SQL, LightGBM, SHAP](https://www.kaggle.com/code/kevinnkameni/credit-risk-scoring-sql-lightgbm-shap)
+
 ## Objectif
 
 Prédire la **probabilité de défaut de paiement** d'un demandeur de crédit, et transformer cette
@@ -151,6 +153,7 @@ src/credit_risk_scoring/
     scoring.py     évaluation d'une demande (PD, score, décision, raisons SHAP)
     api.py         API FastAPI
 app/demo.py        démo Streamlit
+kaggle/            notebook autonome publié sur Kaggle (en anglais)
     sql/           une requête d'agrégation par table d'historique
 tests/             tests pytest
 reports/figures/   graphiques

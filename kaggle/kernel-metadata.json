@@ -1,0 +1,16 @@
+{
+  "id": "kevinnkameni/credit-risk-scoring-sql-lightgbm-shap",
+  "title": "Credit Risk Scoring: SQL, LightGBM, SHAP",
+  "code_file": "credit-risk-scoring.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": false,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": ["home-credit-default-risk"],
+  "kernel_sources": [],
+  "model_sources": [],
+  "keywords": ["finance", "banking", "sql"]
+}

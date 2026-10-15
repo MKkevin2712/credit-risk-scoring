@@ -27,3 +27,6 @@ models/*
 kaggle.json
 access_token
 .env
+
+# Fichier de soumission Kaggle (généré)
+submission.csv
