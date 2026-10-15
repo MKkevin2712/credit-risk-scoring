@@ -7,11 +7,12 @@ En local, la démo propose des clients réels du jeu de test (si data/processed/
 En ligne, les données Kaggle ne sont pas publiées (règlement de la compétition) : la démo propose
 alors des profils types, modifiables avec les curseurs.
 """
+import json
 import os
 import sys
 from pathlib import Path
 
-import matplotlib.pyplot as plt
+import altair as alt
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -30,12 +31,16 @@ EDUCATION = ["Higher education", "Secondary / secondary special", "Incomplete hi
              "Lower secondary", "Academic degree"]
 YEAR = 365.25
 
-# Profils types (fictifs) utilisés quand les données réelles ne sont pas disponibles
+# Client de référence : médiane (ou catégorie la plus fréquente) de chaque variable sur les données
+# d'entraînement. Statistiques agrégées uniquement, aucun client réel. Les profils types partent de là.
+MEDIAN_CLIENT_PATH = Path(__file__).parent / "client_median.json"
+
+# Profils types (fictifs) : seules les caractéristiques qui diffèrent du client médian sont indiquées
 PROFILES = {
     "Profil solide": {
         "EXT_SOURCE_1": 0.75, "EXT_SOURCE_2": 0.72, "EXT_SOURCE_3": 0.70, "AMT_INCOME_TOTAL": 250_000,
         "AMT_CREDIT": 400_000, "AMT_ANNUITY": 20_000, "AGE_YEARS": 48, "DAYS_EMPLOYED": -12 * YEAR,
-        "NAME_EDUCATION_TYPE": "Higher education",
+        "NAME_EDUCATION_TYPE": "Higher education", "OCCUPATION_TYPE": "Managers",
     },
     "Profil moyen": {
         "EXT_SOURCE_1": 0.50, "EXT_SOURCE_2": 0.55, "EXT_SOURCE_3": 0.50, "AMT_INCOME_TOTAL": 150_000,
@@ -43,14 +48,16 @@ PROFILES = {
         "NAME_EDUCATION_TYPE": "Secondary / secondary special",
     },
     "Profil fragile": {
-        "EXT_SOURCE_2": 0.25, "EXT_SOURCE_3": 0.20, "AMT_INCOME_TOTAL": 100_000,
+        "EXT_SOURCE_1": 0.20, "EXT_SOURCE_2": 0.20, "EXT_SOURCE_3": 0.15, "AMT_INCOME_TOTAL": 100_000,
         "AMT_CREDIT": 900_000, "AMT_ANNUITY": 45_000, "AGE_YEARS": 26, "DAYS_EMPLOYED": -0.5 * YEAR,
         "NAME_EDUCATION_TYPE": "Secondary / secondary special",
+        "INST_LATE_RATIO": 0.3, "INST_LATE_RATIO_LAST_YEAR": 0.4, "PREV_REFUSED_RATIO": 0.5,
     },
     "Retraité": {
-        "EXT_SOURCE_2": 0.60, "EXT_SOURCE_3": 0.65, "AMT_INCOME_TOTAL": 90_000, "AMT_CREDIT": 200_000,
-        "AMT_ANNUITY": 12_000, "AGE_YEARS": 63, "DAYS_EMPLOYED_ANOM": 1,
-        "NAME_EDUCATION_TYPE": "Secondary / secondary special",
+        "EXT_SOURCE_1": None, "EXT_SOURCE_2": 0.60, "EXT_SOURCE_3": 0.65, "AMT_INCOME_TOTAL": 90_000,
+        "AMT_CREDIT": 200_000, "AMT_ANNUITY": 12_000, "AGE_YEARS": 63, "DAYS_EMPLOYED_ANOM": 1,
+        "NAME_EDUCATION_TYPE": "Secondary / secondary special", "NAME_INCOME_TYPE": "Pensioner",
+        "OCCUPATION_TYPE": None, "ORGANIZATION_TYPE": "XNA",
     },
 }
 
@@ -73,6 +80,13 @@ def get_test_clients(n: int = 300) -> pd.DataFrame | None:
     sample["TARGET"] = y_test.loc[sample.index]
     sample["SK_ID_CURR"] = df.loc[sample.index, "SK_ID_CURR"]
     return sample.set_index("SK_ID_CURR")
+
+
+@st.cache_data
+def get_median_client() -> dict:
+    if not MEDIAN_CLIENT_PATH.exists():
+        return {}
+    return json.loads(MEDIAN_CLIENT_PATH.read_text(encoding="utf-8"))
 
 
 def clean(value):
@@ -109,8 +123,10 @@ with st.sidebar:
                                         else "crédit remboursé :material/check:"))
         key = str(client_id)
     else:
-        profile = st.selectbox("Profil", list(PROFILES), help="Profils fictifs, modifiables ci-dessous.")
-        base = dict(PROFILES[profile])
+        profile = st.selectbox("Profil", list(PROFILES),
+                               help="Profils fictifs construits à partir du client médian, modifiables ci-dessous.")
+        base = {**get_median_client(), **PROFILES[profile]}
+        base["AMT_GOODS_PRICE"] = None   # recalculé à partir du montant du crédit
         key = profile
 
     st.subheader("Simuler une modification")
@@ -176,15 +192,24 @@ st.caption("Contribution de chaque variable au risque de ce client (valeurs SHAP
 reasons = result.raisons_risque + result.raisons_favorables
 if reasons:
     df = pd.DataFrame([{"variable": r.libelle, "effet": r.effet, "valeur": show(r.valeur)} for r in reasons])
-    df = df.sort_values("effet")
-    fig, ax = plt.subplots(figsize=(8, 0.45 * len(df) + 0.6))
-    ax.barh(df["variable"], df["effet"], color=["#C62828" if e > 0 else "#2E7D32" for e in df["effet"]])
-    ax.axvline(0, color="black", lw=0.8)
-    ax.set_xlabel("Effet sur le risque (log-odds)")
-    for side in ("top", "right"):
-        ax.spines[side].set_visible(False)
-    st.pyplot(fig, alt="Contribution des principales variables au risque du client")
-    st.dataframe(df[::-1].set_index("variable"), alt="Détail des contributions par variable")
+    df = df.sort_values("effet", ascending=False)
+    df["sens"] = np.where(df["effet"] > 0, "Augmente le risque", "Diminue le risque")
+    chart = (
+        alt.Chart(df)
+        .mark_bar()
+        .encode(
+            x=alt.X("effet:Q", title="Effet sur le risque (log-odds)"),
+            y=alt.Y("variable:N", sort=None, title=None, axis=alt.Axis(labelLimit=320)),
+            color=alt.Color("sens:N", scale=alt.Scale(domain=["Augmente le risque", "Diminue le risque"],
+                                                      range=["#C62828", "#2E7D32"]),
+                            legend=alt.Legend(title=None, orient="bottom")),
+            tooltip=["variable", "valeur", alt.Tooltip("effet:Q", format=".3f")],
+        )
+        .properties(height=34 * len(df))
+    )
+    st.altair_chart(chart, alt="Contribution des principales variables au risque du client")
+    with st.expander("Détail des valeurs"):
+        st.dataframe(df.drop(columns="sens").set_index("variable"), alt="Détail des contributions par variable")
 
 with st.expander("Classes de risque et règle d'octroi"):
     grades = decision.risk_grades()

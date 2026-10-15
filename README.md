@@ -152,9 +152,9 @@ src/credit_risk_scoring/
     decision.py    seuil d'octroi, rentabilité, score en points, grille de la scorecard
     scoring.py     évaluation d'une demande (PD, score, décision, raisons SHAP)
     api.py         API FastAPI
-app/demo.py        démo Streamlit
-kaggle/            notebook autonome publié sur Kaggle (en anglais)
     sql/           une requête d'agrégation par table d'historique
+app/demo.py        démo Streamlit (profils types construits à partir du client médian)
+kaggle/            notebook autonome publié sur Kaggle (en anglais)
 tests/             tests pytest
 reports/figures/   graphiques
 ```
